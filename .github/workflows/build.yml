@@ -29,7 +29,9 @@ jobs:
           Get-Content $logpath -ErrorAction Continue
           Write-Host "=== COMPILE LOG END ==="
           
-          Copy-Item "C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5" -Destination $env:GITHUB_WORKSPACE -ErrorAction SilentlyContinue
+          # This line grabs your.ex5 file
+          Copy-Item "C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5" -Destination "$env:GITHUB_WORKSPACE\XAU_3_6_Best.ex5" -Force
+          Write-Host "EX5 copied to workspace"
           
       - name: Upload EX5
         uses: actions/upload-artifact@v4
