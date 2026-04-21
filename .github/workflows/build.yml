@@ -6,34 +6,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Download & Setup MT5
+      - name: Download & Install MT5
         run: |
-          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5clw64.zip" -OutFile mt5.zip
-          Expand-Archive mt5.zip -DestinationPath C:\mt5
-          mkdir C:\mt5\MQL5\Experts
-          Copy-Item XAU_3_6_Best.mq5 C:\mt5\MQL5\Experts\ -Force
+          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
+          Start-Process.\mt5setup.exe -ArgumentList "/auto","/portable" -Wait -PassThru
+          Start-Sleep -Seconds 30
           
       - name: Compile EA
         shell: pwsh
         continue-on-error: true
         run: |
-          C:\mt5\metaeditor64.exe /compile:"C:\mt5\MQL5\Experts\XAU_3_6_Best.mq5" /log:"C:\mt5\compile.log"
+          $mt5path = "C:\Users\runneradmin\AppData\Roaming\MetaQuotes\Terminal\*\metaeditor64.exe"
+          $editor = Resolve-Path $mt5path
+          & $editor /compile:"$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" /log:"$env:GITHUB_WORKSPACE\compile.log"
           Write-Host "=== COMPILE LOG START ==="
-          Get-Content C:\mt5\compile.log -ErrorAction SilentlyContinue
+          Get-Content compile.log -ErrorAction SilentlyContinue
           Write-Host "=== COMPILE LOG END ==="
           
-      - name: Check Result
-        run: |
-          if (Test-Path C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5) {
-            echo "SUCCESS: EX5 FOUND"
-          } else {
-            echo "FAILED: No EX5 file"
-            exit 1
-          }
-          
       - name: Upload EX5
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: XAU_3_6_Best-ex5
-          path: C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5
+          path: Experts\XAU_3_6_Best.ex5
