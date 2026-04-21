@@ -7,21 +7,22 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download & Install MT5
+        shell: pwsh
         run: |
           Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
-          Start-Process.\mt5setup.exe -ArgumentList "/auto","/portable" -Wait -PassThru
+          Start-Process -FilePath.\mt5setup.exe -ArgumentList "/auto","/portable" -Wait
           Start-Sleep -Seconds 30
           
       - name: Compile EA
         shell: pwsh
-        continue-on-error: true
         run: |
-          $mt5path = "C:\Users\runneradmin\AppData\Roaming\MetaQuotes\Terminal\*\metaeditor64.exe"
-          $editor = Resolve-Path $mt5path
+          $terminal = Get-ChildItem "C:\Users\runneradmin\AppData\Roaming\MetaQuotes\Terminal" -Directory | Select-Object -First 1
+          $editor = "$($terminal.FullName)\metaeditor64.exe"
           & $editor /compile:"$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" /log:"$env:GITHUB_WORKSPACE\compile.log"
           Write-Host "=== COMPILE LOG START ==="
-          Get-Content compile.log -ErrorAction SilentlyContinue
+          Get-Content compile.log
           Write-Host "=== COMPILE LOG END ==="
+          if (!(Test-Path "$env:GITHUB_WORKSPACE\Experts\XAU_3_6_Best.ex5")) { throw "Compile failed - no EX5 created" }
           
       - name: Upload EX5
         uses: actions/upload-artifact@v4
