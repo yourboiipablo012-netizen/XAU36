@@ -1,18 +1,18 @@
-name: Build EA
-on: push
+name: Build MQL5
+on: [push]
 jobs:
-  build:
+  compile:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Compile MQL5
-        uses: docker://ghcr.io/fx31337/mql5-compiler:latest
+      - name: Compile EA
+        uses: ea31337/mql-compile-action@v1
         with:
-          args: XAU_3_6_Best.mq5
+          path: XAU_3_6_Best.mq5
           
       - name: Upload EX5
         uses: actions/upload-artifact@v4
         with:
-          name: XAU_3_6_Best
+          name: XAU_3_6_Best-ex5
           path: XAU_3_6_Best.ex5
