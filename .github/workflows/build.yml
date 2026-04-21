@@ -16,13 +16,20 @@ jobs:
       - name: Compile
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Force -Path C:\mt5\MQL5\Experts
+          Copy-Item "$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" -Destination "C:\mt5\MQL5\Experts\" -Force
+          
           $editor = "C:\mt5\metaeditor64.exe"
-          Write-Host "Editor path: $editor"
-          & $editor /compile:"$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" /log:"$env:GITHUB_WORKSPACE\compile.log" /include:"C:\mt5\MQL5"
+          $mq5path = "C:\mt5\MQL5\Experts\XAU_3_6_Best.mq5"
+          $logpath = "C:\mt5\MQL5\Experts\XAU_3_6_Best.log"
+          
+          & $editor /compile:"$mq5path" /log:"$logpath"
+          
           Write-Host "=== COMPILE LOG START ==="
-          Get-Content compile.log
+          Get-Content $logpath -ErrorAction Continue
           Write-Host "=== COMPILE LOG END ==="
-          Get-ChildItem -Path C:\mt5 -Recurse -Filter *.ex5 | ForEach-Object { Copy-Item $_.FullName -Destination $env:GITHUB_WORKSPACE }
+          
+          Copy-Item "C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5" -Destination $env:GITHUB_WORKSPACE -ErrorAction SilentlyContinue
           
       - name: Upload EX5
         uses: actions/upload-artifact@v4
