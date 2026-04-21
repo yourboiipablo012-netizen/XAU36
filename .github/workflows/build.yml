@@ -6,18 +6,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Download MetaTrader 5
+      - name: Setup MT5 Portable
         run: |
-          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
-          Start-Process -FilePath.\mt5setup.exe -ArgumentList "/auto" -Wait
+          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5clw64.zip" -OutFile mt5.zip
+          Expand-Archive mt5.zip -DestinationPath C:\mt5
+          New-Item -ItemType Directory -Force -Path C:\mt5\MQL5\Experts
+          Copy-Item XAU_3_6_Best.mq5 -Destination C:\mt5\MQL5\Experts\
           
       - name: Compile EA
         run: |
-          & "C:\Program Files\MetaTrader 5\metaeditor64.exe" /compile:"$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" /log
-          Get-Content "C:\Program Files\MetaTrader 5\MQL5\Experts\XAU_3_6_Best.log"
+          C:\mt5\metaeditor64.exe /compile:C:\mt5\MQL5\Experts\XAU_3_6_Best.mq5 /log:C:\mt5\compile.log
+          echo "=== COMPILE LOG ==="
+          Get-Content C:\mt5\compile.log
+          if (!(Test-Path C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5)) { exit 1 }
           
       - name: Upload EX5
         uses: actions/upload-artifact@v4
         with:
           name: XAU_3_6_Best-ex5
-          path: C:\Program Files\MetaTrader 5\MQL5\Experts\XAU_3_6_Best.ex5
+          path: C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5
