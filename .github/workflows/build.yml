@@ -2,17 +2,22 @@ name: Build MQL5
 on: [push]
 jobs:
   compile:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       
+      - name: Download MetaTrader 5
+        run: |
+          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
+          Start-Process -FilePath.\mt5setup.exe -ArgumentList "/auto" -Wait
+          
       - name: Compile EA
-        uses: ea31337/mql-compile-action@v1
-        with:
-          path: XAU_3_6_Best.mq5
+        run: |
+          & "C:\Program Files\MetaTrader 5\metaeditor64.exe" /compile:"$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" /log
+          Get-Content "C:\Program Files\MetaTrader 5\MQL5\Experts\XAU_3_6_Best.log"
           
       - name: Upload EX5
         uses: actions/upload-artifact@v4
         with:
           name: XAU_3_6_Best-ex5
-          path: XAU_3_6_Best.ex5
+          path: C:\Program Files\MetaTrader 5\MQL5\Experts\XAU_3_6_Best.ex5
