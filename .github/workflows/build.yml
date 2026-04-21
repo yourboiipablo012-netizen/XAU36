@@ -6,24 +6,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install MT5 Portable
+      - name: Download MT5 Portable
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
-          Start-Process -FilePath.\mt5setup.exe -ArgumentList "/auto","/portable","/path:C:\mt5" -Wait
-          Start-Sleep -Seconds 45
+          Invoke-WebRequest -Uri "https://github.com/JetMuffin/MetaTrader5-Portable/releases/download/v5.0.36/MetaTrader5.zip" -OutFile mt5.zip
+          Expand-Archive mt5.zip -DestinationPath C:\mt5
           
-      - name: Debug and Compile
+      - name: Compile
         shell: pwsh
-        continue-on-error: true
         run: |
-          Write-Host "=== DEBUG: Listing C:\mt5 ==="
-          Get-ChildItem C:\mt5 -Recurse | Select-Object FullName, Length
+          Write-Host "=== Files in C:\mt5 ==="
+          Get-ChildItem C:\mt5 -Recurse -Name
           
-          Write-Host "=== DEBUG: Testing metaeditor64.exe ==="
-          & "C:\mt5\metaeditor64.exe" /? 
-          
-          Write-Host "=== COMPILING ==="
           New-Item -ItemType Directory -Force -Path C:\mt5\MQL5\Experts
           Copy-Item "$env:GITHUB_WORKSPACE\XAU_3_6_Best.mq5" -Destination "C:\mt5\MQL5\Experts\" -Force
           
@@ -34,13 +28,8 @@ jobs:
           Get-Content.\compile.log -ErrorAction Continue
           Write-Host "=== COMPILE LOG END ==="
           
-          Write-Host "=== CHECKING FOR EX5 ==="
-          Get-ChildItem C:\mt5 -Recurse -Filter *.ex5
-          
       - name: Upload EX5
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: XAU_3_6_Best-ex5
           path: C:\mt5\MQL5\Experts\XAU_3_6_Best.ex5
-          if-no-files-found: warn
